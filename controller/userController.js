@@ -21,6 +21,25 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.bulkcreate = async (req, res) => {
+  try {
+    const userInsert = req.body.users;
+    const insertedUser = await Bank.bulkCreate(userInsert);
+    res.status(201).json({
+      status: "success",
+      data: {
+        users: insertedUser,
+      },
+    });
+  } catch (err) {
+    console.error("Error performing bulk insert:", err);
+    res.status(500).json({
+      status: "error",
+      message: "Unable to perform bulk insert",
+    });
+  }
+};
+
 exports.getAllusers = async (req, res) => {
   try {
     const users = await Bank.findAll();
@@ -77,6 +96,31 @@ exports.updateUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.bulkUpdateUsers = async (req, res) => {
+  try {
+    const bulkupdate = req.body.users;
+
+    const updatedUsers = await Promise.all(
+      bulkupdate.map(async (user) => {
+        const [updatedUser] = await Bank.upsert(user, { returning: true });
+        return updatedUser;
+      })
+    );
+    res.status(200).json({
+      status: "success",
+      data: {
+        users: updatedUsers,
+      },
+    });
+  } catch (err) {
+    console.error("Error performing bulk update:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Unable to perform bulk update",
+    });
   }
 };
 
